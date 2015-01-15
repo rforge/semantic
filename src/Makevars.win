@@ -1,5 +1,0 @@
-CXX_STD = CXX11
-PKG_OBJECTS = semantic.o 
-all: $(SHLIB)
-clean: 
-	rm -f $(OBJECTS)
