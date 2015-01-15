@@ -1,0 +1,17 @@
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
+% Alias
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
+
+\references{
+SPARQL 1.1 Query Language W3C Recommendation
+\url{http://www.w3.org/TR/sparql11-query/}
+}
+\author{Wolfgang Kaisers}
+
+%%  ~~objects to See Also as \code{\link{~~fun~~}}, ~~~
+%%  ~~or \code{\linkS4class{CLASSNAME}} for links to other classes ~~~
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
+% Description
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
