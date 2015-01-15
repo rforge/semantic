@@ -1,0 +1,67 @@
+useDynLib(semantic)
+import(methods)
+importFrom(utils,head)
+importFrom(utils,tail)
+importFrom(RCurl, basicTextGatherer)
+importFrom(RCurl, curlPerform)
+importFrom(RCurl, parseHTTPHeader)
+importFrom(XML, xmlParse)
+importFrom(XML, htmlParse)
+export(
+	as.data.frame.Namespace,
+	as.data.frame.ResultSet,
+	curl,
+	exchange_levels,
+	importNamespace,
+	iriTerm,
+	merge.Namespace,
+	parse_data_types,
+	parsePrefix,
+	parseUri,
+	resultSet,
+	selectQuery,
+	sparql,
+	sparqlQuery,
+	split_prefix,
+	text.IriTerm
+)
+exportMethods(
+    "addDataset<-",
+    "addModifier<-",
+    "addPattern<-",
+    "asPrefix",
+    "[",
+    "c",
+    "coerce",
+    "dataset<-",
+    "dataset",
+    "dim",
+    "distinct<-",
+    "distinct",
+    "endpoint<-",
+    "endpoint",
+    "getQuery",
+    "getUrl",
+    "initialize",
+    "parseText",
+    "modifier<-",
+    "modifier",
+    "namespace<-",
+    "namespace",
+    "pattern<-",
+    "pattern",
+    "prefix",
+    "result<-",
+    "result",
+    "sendQuery",
+    "show",
+    "term",
+    "unify" 
+)
+exportClasses(
+    "Namespace",
+     "ResultSet",
+     "SelectQuery",
+     "Sparql",
+     "SparqlQuery" 
+)
