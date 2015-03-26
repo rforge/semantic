@@ -1,0 +1,66 @@
+useDynLib(semantic)
+import(methods)
+importFrom(utils,head)
+importFrom(utils,tail)
+importFrom(RCurl, basicTextGatherer)
+importFrom(RCurl, curlPerform)
+importFrom(RCurl, parseHTTPHeader)
+importFrom(XML, xmlParse)
+importFrom(XML, htmlParse)
+export(
+	"blankNodes",
+        "iriTerm",
+	"langTag",
+	"parse_data_types",
+	"sparql",
+        "queryForm",
+	"queryVariables",
+	"split_prefix",
+        "rdfData"
+)
+exportMethods(
+    "groupPattern",
+    "prefixedTerm",
+    "rdfTerm",
+    "rdfTriple",
+    "sparqlNamespace",
+    "sparqlQuery",
+    "typedLiteral",
+    "addPrefix",
+    "addRdf",
+    "[",
+    "c",
+    "coerce",
+    "endpoint<-",
+    "endpoint",
+    "getNodes",
+    "getUrl",
+    "initialize",
+    "length",
+    "prefix",
+    "qryText",
+    "rdfGraph",
+    "resultDef",
+    "sendQuery",
+    "setRdf",
+    "show",
+    "term"
+)
+exportClasses(
+    "BasicGroupPattern",
+     "BlankNodes",
+     "GroupPattern",
+     "IriTerm",
+     "PrefixedTerm",
+     "QueryForm",
+     "QueryVariables",
+     "RdfData",
+     "RdfGraph",
+     "RdfTerm",
+     "RdfTriple",
+     "ResultDef",
+     "ResultSet",
+     "Sparql",
+     "SparqlNamespace",
+     "SparqlQuery" 
+)

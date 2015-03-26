@@ -1,0 +1,32 @@
+---
+title: "Implementation Details"
+author: "Wolfgang Kaisers"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{Implementation Details}
+%\VignetteEngine{knitr::rmarkdown}
+\usepackage[utf8]{inputenc}
+---
+
+# C++
+
+## Sparql query
+
+
+The class *sparql_query* has three data members:
+
+ - query_form_ : string e.g. *SELECT*
+ - rd_ : result_def
+ - gp_ : group_pattern
+ 
+ 
+### Group pattern
+
+A group_pattern object consists of a list of *basic_goup_pattern's*.
+
+basic_group_pattern is used as base class for various derivates which
+may be assembled into a group_pattern. Derived are:
+
+ - group_pattern
+ - rdf_triple

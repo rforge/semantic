@@ -1,0 +1,1384 @@
+---
+title: "Example SPARQL queries"
+author: "Wolfgang Kaisers"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+%\VignetteIndexEntry{Example SPARQL queries}
+%\VignetteEngine{knitr::rmarkdown}
+\usepackage[utf8]{inputenc}
+---
+
+# Queries against NIH Databases
+
+ - [MESH](http://id.nlm.nih.gov/mesh/sparql)
+ - [MESH](http://id.nlm.nih.gov/mesh/)
+
+```{r,eval=FALSE}
+sql <- "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+
+SELECT DISTINCT ?class
+FROM <http://id.nlm.nih.gov/mesh2014>
+WHERE { [] a ?class . }
+ORDER BY ?class
+"
+ep <- sparql("http://id.nlm.nih.gov/mesh/sparql")
+validObject(ep)
+```
+
+# Queries against EBI databases
+
+## Chembl
+
+```{r,eval=FALSE}
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
+PREFIX chembl_molecule: <http://rdf.ebi.ac.uk/resource/chembl/molecule/>")
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/chembl/sparql")
+validObject(ep)
+
+sql <-"SELECT ?mol ?atc
+WHERE
+{
+    ?mol skos:altLabel 'Irinotecan' .
+    ?mol cco:atcClassification ?atc .
+    ?mol 
+} LIMIT 5" 
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+```
+
+
+```{r,eval=FALSE}
+sql <-"SELECT ?mol ?atc
+WHERE
+{
+    ?mol rdfs:label 'IRINOTECAN' .
+    ?mol cco:atcClassification ?atc .
+} LIMIT 5" 
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+```
+
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Retrieve journal names 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
+PREFIX chembl_molecule: <http://rdf.ebi.ac.uk/resource/chembl/molecule/>")
+
+
+sql <- "SELECT DISTINCT ?journal ?title ?date
+WHERE{ 
+  ?molecule rdfs:subClassOf cco:Substance. 
+  ?molecule skos:altLabel 'Irinotecan'.
+  ?molecule cco:hasDocument ?doc.
+  ?doc cco:hasJournal ?journal.
+  ?journal dcterms:title ?title.
+  ?doc dcterms:date ?date.
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 2
+```
+
+## Biomodels
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# BioModels
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/biomodels/sparql")
+validObject(ep)
+
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX sbmlrdf: <http://identifiers.org/biomodels.vocabulary#>
+PREFIX biomod: <http://identifiers.org/biomodels.db/>
+PREFIX goid: <http://identifiers.org/go/>")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?speciesid ?name
+WHERE
+{
+ biomod:BIOMD0000000001 sbmlrdf:species ?speciesid . 
+ ?speciesid sbmlrdf:name ?name
+}"
+
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+res1 <- cbind(res, split_prefix(res$speciesid))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?element ?qualifier ?annotation
+WHERE
+{ 
+biomod:BIOMD0000000001 ?p ?element . 
+?p rdfs:subPropertyOf sbmlrdf:sbmlElement . 
+?element ?qualifier ?annotation . 
+?qualifier rdfs:subPropertyOf sbmlrdf:sbmlAnnotation 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+res <- cbind(res, split_prefix(res$annotation))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?modelElement ?elementType ?qualifier
+WHERE
+{ 
+?modelElement ?qualifier goid:GO:0005892 .  
+?qualifier rdfs:subPropertyOf sbmlrdf:sbmlAnnotation . 
+?modelElement rdf:type ?elementType 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+res <- cbind(res, split_prefix(res$modelElement))
+```
+
+## Biosamples
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# BioSamples
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/biosamples/sparql")
+validObject(ep)
+
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX efo: <http://www.ebi.ac.uk/efo/>
+PREFIX biosd-terms: <http://rdf.ebi.ac.uk/terms/biosd/>
+PREFIX pav: <http://purl.org/pav/2.0/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX sio: <http://semanticscience.org/resource/>")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT DISTINCT *
+WHERE 
+{
+{ select ?item WHERE { ?item a biosd-terms:BiosamplesSubmission. } LIMIT 3}
+UNION
+{ select ?item { ?item a biosd-terms:SampleGroup. } LIMIT 3 }
+UNION
+{ select ?item { ?item a biosd-terms:Sample. } LIMIT 3 }
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+res <- cbind(res, split_prefix(res$item))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+## Samples with a given property value and type, and external links
+## This version doesn't exploit any ontology for sample properties.
+#
+
+
+sql <- "SELECT DISTINCT ?smp ?pvLabel ?propTypeLabel ?repoName ?repoAcc ?repoUrl
+WHERE 
+{
+  ?smp
+    a biosd-terms:Sample;
+    biosd-terms:has-bio-characteristic | sio:SIO_000332 ?pv; # is about
+    pav:derivedFrom ?webRec.
+
+  ?pv
+    rdfs:label ?pvLabel;
+    biosd-terms:has-bio-characteristic-type ?pvType.
+  
+  ?pvType 
+    rdfs:label ?propTypeLabel.
+
+  FILTER ( LCASE ( STR ( ?propTypeLabel ) ) = 'organism' ).
+  FILTER ( LCASE ( STR ( ?pvLabel ) ) = 'homo sapiens' ).
+
+  ?webRec
+    dcterms:identifier ?repoAcc;
+    dcterms:source ?repoName;
+    foaf:page ?repoUrl.
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1.000
+res <- cbind(res, split_prefix(res$smp))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+## All samples that derives from a given organism (Listeria)
+#
+sql <- "SELECT DISTINCT ?smp ?pvLabel ?propTypeLabel
+WHERE 
+{
+  ?smp biosd-terms:has-bio-characteristic ?pv.
+  ?pv biosd-terms:has-bio-characteristic-type ?pvType;
+        rdfs:label ?pvLabel.
+        ?pvType a ?pvTypeClass.
+  
+  # Listeria
+  ?pvTypeClass 
+    rdfs:label ?propTypeLabel;
+    # '*' gives you transitive closure, even when inference is didsbled  
+    rdfs:subClassOf* <http://purl.obolibrary.org/obo/NCBITaxon_1637>    
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, "text/csv") # 6
+res <- cbind(res, split_prefix(res$smp))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 4
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+#
+## All samples treated with a compound of 'alchool' type or a more specific alchool type
+#  this is made through a query over the bioportal sparql endpoint (ie, a federated query)
+#
+sql <- "SELECT DISTINCT ?smp ?pvLabel ?pvTypeLabel ?pvTypeClass
+{
+  SERVICE <http://sparql.bioontology.org/ontologies/sparql/?apikey=c6ae1b27-9f86-4e3c-9dcf-087e1156eabe> 
+  {
+    ?pvTypeClass 
+      rdfs:subClassOf <http://purl.obolibrary.org/obo/CHEBI_30879>; 
+      rdfs:label ?pvTypeLabel.
+  }
+
+  ?pvType 
+    a ?pvTypeClass. 
+
+  ?pv 
+    biosd-terms:has-bio-characteristic-type ?pvType;
+    rdfs:label ?pvLabel.
+  
+  ?smp 
+    a biosd-terms:Sample;
+    biosd-terms:has-bio-characteristic ?pv.
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 694
+res <- cbind(res, split_prefix(res$smp))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 5
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+#
+## Samples with temperature attributes. DO REQUIRE Inference enabled (???)
+#
+sql <- "select distinct ?smp ?pvTypeLabel ?tvalLabel ?tval ?unitLabel
+{
+  ?smp 
+    a biosd-terms:Sample;
+    biosd-terms:has-bio-characteristic | sio:SIO_000332 ?tPv. # is about
+    
+  ?tPv 
+    sio:SIO_000300 ?tval; # sio:has value
+    rdfs:label ?tvalLabel; # contains a string composed with value and unit
+    sio:SIO_000221 [ # sio:has unit
+      a obo:UO_0000027; # temperature
+      rdfs:label ?unitLabel
+    ].
+    
+  ?tPv biosd-terms:has-bio-characteristic-type ?pvType.
+  ?pvType rdfs:label ?pvTypeLabel 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 2
+res <- cbind(res, split_prefix(res$smp))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 6
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+#
+# Property values with ranges
+#
+sql <- "select distinct ?item ?lo ?hi ?vlabel ?pTypeLabel ?unitClass 
+where 
+{
+  ?item biosd-terms:has-bio-characteristic ?pv.
+    
+  ?pv 
+    biosd-terms:has-bio-characteristic-type ?ptype;
+    biosd-terms:has-low-value ?lo;
+    biosd-terms:has-high-value ?hi;
+    rdfs:label ?vlabel. # contains a string composed with value and unit
+
+  ?ptype
+    rdfs:label ?pTypeLabel.
+  
+  FILTER ( ?ptype != sio:SIO_000944 ). # interval, obvious
+  
+  
+  OPTIONAL {               
+    ?pv 
+      sio:SIO_000221 [ # sio:has unit
+      a ?unitClass;
+    ]. 
+    FILTER ( ?unitClass != owl:NamedIndividual ).  
+    FILTER ( ?unitClass != sio:SIO_000074 ). # unit, obvious  
+  }
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1000
+res <- cbind(res, split_prefix(res$smp))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 7
+# Samples reporting latitude and longitude
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT DISTINCT ?item ?latVal ?longVal WHERE {
+  ?item biosd-terms:has-bio-characteristic ?latPv, ?longPv.
+    
+  ?latPv 
+    biosd-terms:has-bio-characteristic-type [ rdfs:label ?latLabel];
+    sio:SIO_000300 ?latVal. # sio:has value
+
+  FILTER ( REGEX ( ?latLabel, 'latitude', 'i' ) ).
+       
+  ?longPv 
+    biosd-terms:has-bio-characteristic-type [ rdfs:label ?longLabel ];
+    sio:SIO_000300 ?longVal. # sio:has value
+
+  FILTER ( REGEX ( ?longLabel, 'longitude', 'i' ) ).
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1.000
+res <- cbind(res, split_prefix(res$item))
+
+```
+
+
+## EBI Chembl
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Ebi Chembl
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX cco: <http://rdf.ebi.ac.uk/terms/chembl#>
+PREFIX chembl_molecule: <http://rdf.ebi.ac.uk/resource/chembl/molecule/>")
+cat(asPrefix(ns))
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/chembl/sparql")
+validObject(ep)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT (STR(?o) AS ?substance) (STR(?s) AS ?type)
+WHERE {
+  ?o ?p cco:Substance .
+  ?o cco:substanceType ?s
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1.000 molecules
+res <- cbind(res, split_prefix(res$substance))
+table(res$type)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?Source ?Description
+WHERE {
+  ?Source ?p cco:Source .
+  ?Source dcterms:description ?Description
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 26
+res <- cbind(res, split_prefix(res$Source))
+head(res)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?obj ?targetType
+WHERE {
+  ?obj ?p cco:Target .
+  ?obj cco:targetType ?targetType
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+res <- cbind(res, split_prefix(res$obj))
+head(res)
+table(res$targetType)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 4
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?activity ?assay ?target ?targetcmpt ?uniprot
+WHERE {
+  ?activity a cco:Activity ;
+  cco:hasAssay ?assay .
+  ?assay cco:hasTarget ?target .
+  ?target cco:hasTargetComponent ?targetcmpt .
+  ?targetcmpt cco:targetCmptXref ?uniprot .
+  ?uniprot a cco:UniprotRef
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+nrow(res)
+res <- cbind(res, split_prefix(res$obj))
+head(res)
+table(res$targetType)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 5
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?activity ?assay ?target ?targetcmpt ?uniprot
+WHERE {
+  ?activity a cco:Activity ;
+  cco:hasMolecule chembl_molecule:CHEMBL941 ;
+  cco:hasAssay ?assay .
+  ?assay cco:hasTarget ?target .
+  ?target cco:hasTargetComponent ?targetcmpt .
+  ?targetcmpt cco:targetCmptXref ?uniprot .
+  ?uniprot a cco:UniprotRef
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1.000
+res <- cbind(res, split_prefix(res$activity))
+table(res$prefix)
+
+
+```
+
+
+## Expression Atlas
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Expression Atlas
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX obo: <http://purl.obolibrary.org/obo/>
+PREFIX sio: <http://semanticscience.org/resource/>
+PREFIX efo: <http://www.ebi.ac.uk/efo/>
+PREFIX atlas: <http://rdf.ebi.ac.uk/resource/atlas/>
+PREFIX atlasterms: <http://rdf.ebi.ac.uk/terms/atlas/>
+PREFIX upc:<http://purl.uniprot.org/core/>
+PREFIX identifiers:<http://identifiers.org/ensembl/>
+PREFIX biopax3:<http://www.biopax.org/release/biopax-level3.owl#>")
+cat(asPrefix(ns))
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/atlas/sparql")
+validObject(ep)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT DISTINCT ?experiment ?description WHERE {
+?experiment a atlasterms:Experiment .
+?experiment dcterms:description ?description
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 2.838
+res <- cbind(res, split_prefix(res$experiment))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT distinct ?expressionValue ?dbXref ?pvalue ?propertyValue
+WHERE {
+?expUri atlasterms:hasAnalysis ?analysis .
+?analysis atlasterms:hasExpressionValue ?value .
+?value a atlasterms:IncreasedDifferentialExpressionRatio .
+?value rdfs:label ?expressionValue .
+?value atlasterms:pValue ?pvalue .
+?value atlasterms:hasFactorValue ?factor .
+?value atlasterms:isMeasurementOf ?probe .
+?probe atlasterms:dbXref ?dbXref .
+?factor atlasterms:propertyType ?propertyType .
+?factor atlasterms:propertyValue ?propertyValue .
+?factor rdf:type efo:EFO_0000270 .
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 321
+res <- cbind(res, split_prefix(res$dbXref))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT distinct ?diffValue ?expUri ?propertyType ?propertyValue ?pvalue
+WHERE {
+?expUri atlasterms:hasAnalysis ?analysis .
+?analysis atlasterms:hasExpressionValue ?value .
+?value rdfs:label ?diffValue .
+?value atlasterms:hasFactorValue ?factor .
+?factor atlasterms:propertyType ?propertyType .
+?factor atlasterms:propertyValue ?propertyValue .
+?value atlasterms:pValue ?pvalue .
+?value atlasterms:isMeasurementOf ?probe .
+?probe atlasterms:dbXref identifiers:ENSG00000129991 .
+}
+ORDER BY ASC (?pvalue)"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 511
+nrow(res)
+res <- cbind(res, split_prefix(res$dbXref))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 4
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+ns <- append(ns, c("upc", "purl.uniprot.org/core/"))
+sql <- "SELECT distinct ?valueLabel ?goid ?golabel
+WHERE
+{
+    ?value rdfs:label ?valueLabel .
+    ?value atlasterms:isMeasurementOf ?probe .
+    ?probe atlasterms:dbXref identifiers:ENSG00000129991 .
+    ?probe atlasterms:dbXref ?uniprot .
+    SERVICE <http://beta.sparql.uniprot.org/sparql>
+    {
+        ?uniprot a upc:Protein  .
+        ?uniprot upc:classifiedWith ?keyword .
+        ?keyword rdfs:seeAlso ?goid .
+        ?goid rdfs:label ?golabel .
+    }
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 874
+res <- cbind(res, split_prefix(res$goid))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 5
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT distinct ?pathwayname ?expressionValue ?pvalue
+WHERE
+{
+    ?protein rdf:type biopax3:Protein .
+    ?protein biopax3:memberPhysicalEntity 
+    [biopax3:entityReference ?dbXref] .
+    ?pathway rdf:type biopax3:Pathway .
+    ?pathway biopax3:displayName ?pathwayname .
+    ?pathway biopax3:pathwayComponent ?reaction .
+    ?reaction rdf:type biopax3:BiochemicalReaction .
+    {
+        {?reaction ?rel ?protein .}
+        UNION 
+        { 
+            ?reaction  ?rel  ?complex .
+            ?complex rdf:type biopax3:Complex .
+            ?complex ?comp ?protein .
+        } 
+    } 
+    ?factor rdf:type efo:EFO_0000270 . 
+    ?value atlasterms:hasFactorValue ?factor . 
+    ?value atlasterms:isMeasurementOf ?probe . 
+    ?value atlasterms:pValue ?pvalue . 
+    ?value rdfs:label ?expressionValue . 
+    ?probe atlasterms:dbXref ?dbXref .
+}
+ORDER BY ASC (?pvalue)"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 31
+res <- cbind(res, split_prefix(res$goid))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 6
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT distinct *
+WHERE
+{
+    ?probe atlasterms:dbXref ?dbXref .
+    ?dbXref a ?dbXrefType .
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 100.000
+res <- cbind(res, split_prefix(res$dbXrefType))
+
+
+```
+
+## Reactome
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Reactome
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX up:<http://purl.uniprot.org/core/> 
+PREFIX biopax3: <http://www.biopax.org/release/biopax-level3.owl#>
+PREFIX keywords:<http://purl.uniprot.org/keywords/>")
+cat(asPrefix(ns))
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/reactome/sparql")
+validObject(ep)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT DISTINCT ?pathway ?pathwayname 
+WHERE 
+{
+?pathway rdf:type biopax3:Pathway .
+?pathway biopax3:displayName ?pathwayname 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 21.195
+res <- cbind(res, split_prefix(res$pathway))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT DISTINCT ?pathway ?pathwayname 
+WHERE 
+{
+    ?pathway rdf:type biopax3:Pathway .
+    ?pathway biopax3:displayName ?pathwayname .
+    ?pathway biopax3:pathwayComponent ?reaction .
+    ?reaction rdf:type biopax3:BiochemicalReaction .
+    {
+        {?reaction ?rel ?protein .}
+        UNION
+        {
+            ?reaction  ?rel  ?complex .
+            ?complex rdf:type biopax3:Complex .
+            ?complex ?comp ?protein .
+        }
+    } 
+    ?protein rdf:type biopax3:Protein .
+    ?protein biopax3:entityReference <http://purl.uniprot.org/uniprot/P01308>
+}
+LIMIT 100"
+
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 4
+res <- cbind(res, split_prefix(res$pathway))
+
+
+```
+
+## Uniprot
+
+```{r,eval=FALSE}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# UniProt
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://beta.sparql.uniprot.org/")
+validObject(ep)
+
+ns <- namespace("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX up: <http://purl.uniprot.org/core/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX taxon: <http://purl.uniprot.org/taxonomy/>
+PREFIX faldo: <http://biohackathon.org/resource/faldo#>
+PREFIX ec: <http://purl.uniprot.org/enzyme/>")
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?taxon
+FROM <http://beta.sparql.uniprot.org/taxonomy/>
+WHERE
+{
+    ?taxon a up:Taxon .
+}
+LIMIT 10"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1.414.859
+uniprotTaxons <- cbind(res, split_prefix(res$taxon))
+save(uniprotTaxons, file=file.path(basedir, "downloads","uniprotTaxons.RData")
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?taxon ?name
+WHERE
+{
+    ?taxon a up:Taxon .
+    ?taxon up:scientificName ?name .
+    ?taxon rdfs:subClassOf* taxon:2 .
+}
+LIMIT 10"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 360.649
+res <- cbind(res, split_prefix(res$))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# Amino acid sequence for proteins
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein ?aa 
+WHERE
+{
+    ?protein a up:Protein .
+    ?protein up:organism ?organism .
+    {
+        ?protein up:organism taxon:83333 .
+    }
+    UNION
+    {
+        ?protein up:organism ?organism .
+        ?organism rdfs:subClassOf+ taxon:83333 .
+    } 
+    ?protein up:sequence ?s .
+    ?s rdf:value ?aa
+}
+LIMIT 10"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+res <- cbind(res, split_prefix(res$))
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 4
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein
+WHERE
+{
+    ?protein a up:Protein . 
+    ?protein up:mnemonic 'A4_HUMAN'
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+res <- cbind(res, split_prefix(res$))
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 5
+# Returns Worldwide Protein Data Bank (PDB) links
+# http://rdf.wwpdb.org/pdb : 1FP2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein ?db
+WHERE
+{
+    ?protein a up:Protein .
+    ?protein rdfs:seeAlso ?db .
+    ?db up:database <http://purl.uniprot.org/database/PDB>
+}
+LIMIT 10"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 10
+rs <- resultSet(res)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 6 3D structure databases 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT DISTINCT ?protein ?link ?db
+WHERE
+{
+    ?protein a up:Protein . 
+    ?protein up:classifiedWith keywords:3 .
+    ?protein rdfs:seeAlso ?link .
+    ?link up:database ?db .
+    ?db up:category '3D structure databases'
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 5 ??
+rs <- resultSet(res)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 6.a 3D structure databases
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT DISTINCT ?db
+WHERE
+{
+    ?db up:category '3D structure databases'
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 9
+res <- cbind(res, split_prefix(res$))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 7
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?protein ?name
+WHERE
+{
+?protein a up:Protein .
+?protein up:recommendedName ?recommended .
+?recommended up:fullName ?name .
+?protein up:encodedBy ?gene .
+?gene skos:prefLabel ?text .
+FILTER CONTAINS(?text, 'DNA')
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+rs <- resultSet(res)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 8
+# Preferred gene name and disease annotation of
+# human UniProt entries that are known to be involved in a disease.
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein ?name ?disease
+WHERE
+{
+    ?protein a up:Protein . 
+    ?protein up:organism taxon:9606 .
+    ?protein up:encodedBy ?gene . 
+    ?gene skos:prefLabel ?name .
+    ?protein up:annotation ?annotation .
+    ?annotation a up:Disease_Annotation .
+    ?annotation up:disease ?disease
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+res <- cbind(res, split_prefix(res$))
+
+
+
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 9
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein ?text
+WHERE
+{ 
+    ?protein a up:Protein .
+    ?protein up:organism taxon:9606 . 
+    ?protein up:annotation ?annotation .
+    ?annotation a up:Natural_Variant_Annotation . 
+    ?annotation rdfs:comment ?text .
+    FILTER (CONTAINS(?text, 'loss of function'))
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 10
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+sql <- "SELECT ?protein ?annotation ?begin ?text
+WHERE
+{
+?protein a up:Protein .
+?protein up:organism taxon:9606 . 
+?protein up:annotation ?annotation .
+?annotation a up:Natural_Variant_Annotation .
+?annotation rdfs:comment ?text .
+?annotation up:substitution ?substitution .
+?annotation up:range/faldo:begin/faldo:position ?begin .
+?protein up:sequence ?sequence .
+?sequence rdf:value ?value .
+BIND (substr(?value, ?begin, 1) as ?original) .
+FILTER(?original = 'Y' && ?substitution = 'F') .
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+res <- cbind(res, split_prefix(res$))
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 11 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein ?begin ?end
+WHERE 
+{
+    ?protein a up:Protein .
+    ?protein up:annotation ?annotation .
+    ?annotation a up:Transmembrane_Annotation .
+    ?annotation up:range ?range .
+    ?range faldo:begin/faldo:position ?begin .
+    ?range faldo:end/faldo:position ?end
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 5
+tv <- parse_data_types(res$begin)
+tv
+rs <- resultSet(res)
+
+# 2142^^<http://www.w3.org/2001/XMLSchema#int>
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 12
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?protein
+WHERE
+{
+    ?protein a up:Protein . 
+    ?protein up:created '2010-11-30'^^xsd:date
+} LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 395.979
+res <- cbind(res, split_prefix(res$))
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 13
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "ASK
+WHERE
+{
+    ?protein a up:Protein .
+    ?protein up:created '2013-01-09'^^xsd:date
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="text/csv") # "true"
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 14
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "CONSTRUCT
+{
+    ?protein a up:HumanProtein .
+}
+WHERE
+{
+?protein a up:Protein .
+?protein up:organism taxon:9606
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="text/csv") # 140.992
+res2<- read.csv(textConnection(res), header=FALSE) 
+
+
+res2 <- cbind(res, split_prefix(res$))
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 15
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "DESCRIBE <http://purl.uniprot.org/embl-cds/AAO89367.1>"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="text/csv")
+res2<- read.csv(textConnection(res), header=FALSE, sep=" ")
+res3 <- res2[,1:3]
+names(res3) <- c("subject", "predicate", "object") # 4
+
+res <- cbind(res, split_prefix(res$))
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 16
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "DESCRIBE taxon:9606
+FROM <http://beta.sparql.uniprot.org/taxonomy/>"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="text/csv")
+res2<- read.csv(textConnection(res), header=FALSE, sep=" ")
+res3 <- res2[,1:3]
+names(res3) <- c("subject", "predicate", "object") # 4
+dim(res3)
+head(res3)
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 17
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT (AVG(?linksToPdbPerEntry) AS ?avgLinksToPdbPerEntry)
+WHERE
+{
+    SELECT ?protein (COUNT(DISTINCT ?db) AS ?linksToPdbPerEntry)
+    WHERE
+    {
+        ?protein a up:Protein .
+        ?protein rdfs:seeAlso ?db .
+        ?db up:database <http://purl.uniprot.org/database/PDB>
+    }
+    GROUP BY ?protein ORDER BY DESC(?linksToPdbPerEntry)
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+```
+
+## Diverse EBI databases
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Diverse
+# http://www.ebi.ac.uk/rdf/example-sparql-queries
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ns <- namespace(readLines("uniProt_prefix.txt"))
+cat(asPrefix(ns),"\n")
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/reactome/sparql")
+validObject(ep)
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 1:
+# How are the protein targets of the gleevec drug differentially expressed, 
+# which pathways are they involved in?
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/chembl/sparql")
+
+sql <- "SELECT distinct ?dbXref (str(?pathwayname) as ?pathname) ?factorLabel 
+WHERE
+{ 
+    # query chembl for gleevec (CHEMBL941) protein targets
+    ?act a cco:Activity; 
+    cco:hasMolecule chembl_molecule:CHEMBL941 ;  
+    cco:hasAssay ?assay .
+    ?assay cco:hasTarget ?target .
+    ?target cco:hasTargetComponent ?targetcmpt .
+    ?targetcmpt cco:targetCmptXref ?dbXref .
+    ?targetcmpt cco:taxonomy  .
+    ?dbXref a cco:UniprotRef
+    
+    # query for pathways by those protein targets
+    SERVICE <http://www.ebi.ac.uk/rdf/services/reactome/sparql>
+    {
+        ?protein rdf:type biopax3:Protein .
+        ?protein biopax3:memberPhysicalEntity 
+        [biopax3:entityReference ?dbXref] .
+        ?pathway biopax3:displayName ?pathwayname .
+        ?pathway biopax3:pathwayComponent ?reaction .
+        ?reaction ?rel ?protein .
+    }
+    
+    # get Atlas experiment plus experimental factor where protein is expressed
+    SERVICE <http://www.ebi.ac.uk/rdf/services/atlas/sparql>
+    {
+        ?probe atlasterms:dbXref ?dbXref .
+        ?value atlasterms:isMeasurementOf ?probe . 
+        ?value atlasterms:hasFactorValue ?factor .  
+        ?value rdfs:label ?factorLabel . 
+    }
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 42
+res <- cbind(res, split_prefix(res$))
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/atlas/sparql")
+validObject(ep)
+
+sql <- "SELECT * 
+WHERE
+{
+    ?protein rdf:type biopax3:Protein .
+    ?protein biopax3:memberPhysicalEntity 
+    [biopax3:entityReference ?dbXref] .
+    ?pathway biopax3:displayName ?pathwayname .
+    ?pathway biopax3:pathwayComponent ?reaction .
+    ?reaction ?rel ?protein .
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 49.643
+
+sql <- "SELECT * WHERE{
+?probe atlasterms:dbXref ?dbXref .
+       ?value atlasterms:isMeasurementOf ?probe . 
+?value atlasterms:hasFactorValue ?factor .  
+?value rdfs:label ?factorLabel . 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 100.000
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 2
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/atlas/sparql")
+sql <- "SELECT distinct ?dbXrefProt ?pathwayname ?moleculeLabel ?expressionValue ?propertyValue
+WHERE
+{
+    #Get differentially expressed genes (and proteins) where factor is asthma
+    ?value atlasterms:pValue ?pvalue .
+    ?value atlasterms:hasFactorValue ?factor .
+    ?value rdfs:label ?expressionValue .
+    ?value atlasterms:isMeasurementOf ?probe .
+    ?probe atlasterms:dbXref ?dbXrefProt .
+    ?dbXrefProt a atlasterms:UniprotDatabaseReference .
+    ?factor atlasterms:propertyType ?propertyType .
+    ?factor atlasterms:propertyValue ?propertyValue .
+    ?factor rdf:type efo:EFO_0000270 .
+    
+    #Compunds target them
+    SERVICE <http://www.ebi.ac.uk/rdf/services/chembl/sparql>
+    {
+        ?act a cco:Activity ;
+        cco:hasMolecule ?molecule ;
+        cco:hasAssay ?assay .
+        ?molecule rdfs:label ?moleculeLabel .
+        ?assay cco:hasTarget ?target .
+        ?target cco:hasTargetComponent ?targetcmpt .
+        ?targetcmpt cco:targetCmptXref ?dbXrefProt .
+        ?targetcmpt cco:taxonomy <http://identifiers.org/taxonomy/9606> .
+        ?dbXrefProt a cco:UniprotRef .
+    }
+    
+    SERVICE <http://www.ebi.ac.uk/rdf/services/reactome/sparql>
+    {
+        ?protein rdf:type biopax3:Protein .
+        ?protein biopax3:memberPhysicalEntity
+            [biopax3:entityReference ?dbXrefProt] .
+        ?pathway biopax3:displayName ?pathwayname .
+        ?pathway biopax3:pathwayComponent ?reaction .
+        ?reaction ?rel ?protein
+    }
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 0
+res <- cbind(res, split_prefix(res$))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 3
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://www.ebi.ac.uk/rdf/services/atlas/sparql")
+sql <- "SELECT distinct ?experiment ?sample ?compound ?chebi 
+WHERE { 
+?value a atlasterms:IncreasedDifferentialExpressionRatio .
+?value atlasterms:hasFactorValue ?factor .
+?factor atlasterms:propertyType ?propertyType .
+?factor atlasterms:propertyValue ?compound . 
+?factor a ?chebi .
+filter (str(?chebi) != 'http://www.w3.org/2002/07/owl#NamedIndividual')
+filter regex (?propertyType, 'compound', 'i')
+filter (?compound != 'none'^^xsd:string) 
+
+?analysis atlasterms:hasExpressionValue ?value . 
+?experiment atlasterms:hasAnalysis ?analysis .
+?experiment
+atlasterms:hasAssay
+[atlasterms:hasSample ?sid] .
+?sid atlasterms:hasSampleCharacteristic [atlasterms:propertyValue ?compound] .
+?sid atlasterms:hasSampleCharacteristic [atlasterms:propertyType ?samplePropertyType ; atlasterms:propertyValue ?sample] 
+filter regex (?samplePropertyType, 'cell line', 'i') 
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 0
+res <- cbind(res, split_prefix(res$))
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query 4
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+sql <- "SELECT ?parent ?parent_name  (COUNT(DISTINCT ?parent_tc) AS ?parent_desc_count)
+WHERE
+{
+    ?parent cco:classLevel 'L1' ;
+    skos:prefLabel ?parent_name ;
+    cco:hasTargetDescendant ?parent_tc .
+}
+GROUP BY ?parent ?parent_name"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 0
+res <- cbind(res, split_prefix(res$))
+
+
+```
+
+
+# DBpedia 
+
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Full description of dataset:
+# http://dbpedia.org/page/Irinotecan
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+ep <- sparql("http://dbpedia.org/sparql")
+ns <- namespace("PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX : <http://dbpedia.org/resource/>
+PREFIX dbpedia2: <http://dbpedia.org/property/>
+PREFIX dbpedia: <http://dbpedia.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dbo: <http://dbpedia.org/ontology/>")
+
+sql <- "SELECT * WHERE {
+    ?resource rdfs:label 'Irinotecan'@en .
+}"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 2
+
+sql <- "SELECT * WHERE {
+    ?resource rdfs:label 'Irinotecan'@en .
+    ?resource dbpedia-owl:pubchem ?pubchem_id
+}
+LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") # 1
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query properties
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://dbpedia.org/sparql")
+ns <- namespace("PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX : <http://dbpedia.org/resource/>
+PREFIX dbpedia2: <http://dbpedia.org/property/>
+PREFIX dbpedia: <http://dbpedia.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbpprop: <http://dbpedia.org/property/>")
+cat(asPrefix(ns))
+
+sql <- "SELECT * WHERE {
+    ?resource rdfs:label 'Irinotecan'@en .
+    ?resource dbpedia-owl:pubchem ?pubchem_id .
+    ?resource rdf:type ?type .
+    ?resource dbpprop:chembl ?chembl
+}
+LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") #
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query properties
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+ep <- sparql("http://dbpedia.org/sparql")
+ns <- namespace("PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX : <http://dbpedia.org/resource/>
+PREFIX dbpedia2: <http://dbpedia.org/property/>
+PREFIX dbpedia: <http://dbpedia.org/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbpprop: <http://dbpedia.org/property/>")
+cat(asPrefix(ns))
+
+sql <- "SELECT * WHERE {
+    ?resource rdfs:label 'Irinotecan'@en .
+    ?resource dbpedia-owl:pubchem ?pubchem_id .
+    ?resource dbpprop:chembl ?chembl.
+    ?resource dbpprop:drugbank ?drugbank
+}
+LIMIT 5"
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table") #
+
+```
+
+# Linkedlifedata
+```{r,eval=FALSE}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Query linkelifedata Endpoint
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+ep <- sparql("http://linkedlifedata.com/sparql")
+ns <- namespace("PREFIX psys: <http://proton.semanticweb.org/2006/05/protons#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gene: <http://linkedlifedata.com/resource/entrezgene/>
+")
+sql <- "SELECT ?gene ?go
+WHERE {
+    ?gene rdf:type gene:Gene;
+    gene:geneSymbol 'TP53' .
+    ?gene gene:goTerm ?go .
+}LIMIT 5"
+
+sp <- sparqlQuery(sql, ns)
+res <- sendQuery(ep, sp, accept="table")
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
+
+```{r,eval=FALSE}
+
+
+```
+
