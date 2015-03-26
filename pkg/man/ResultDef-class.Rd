@@ -64,7 +64,7 @@ SPARQL 1.1 Query Language W3C Recommendation
 # Create RdfTerm's
 bns <- blankNodes()
 ba <- getNodes(bns, 2)
-qv <- queryVariables(c("q", "s"))
+qv <- queryVariable(c("q", "s"))
 # Create object
 rdef <- resultDef(c(ba, qv[1]))
 rdef

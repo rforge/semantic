@@ -389,6 +389,52 @@ setAs("SparqlNamespace", "data.frame", function(from)
     return(res)
 })
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# Extracts complete SparqlNamespace data from
+# single textual Prefix representation
+# Unexported function
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+parsePrefix <- function(text)
+{
+    if(is.factor(text))
+        text <- as.character(text)
+    
+    if(!is.character(text))
+        stop("'text' must be character (or factor)!")
+    
+    
+    # Split lines into vector elements
+    val <- unlist(strsplit(text, "\n"))
+    # Remove leading 'PREFIX '
+    val <- sub("^PREFIX ", "", val)
+    # Find position of ':'
+    pos <- regexpr(":", val)
+    # Extract namespace
+    ns <- substr(val, 1, pos - 1)
+    # Remove namespace
+    val <- substring(val, pos + 1)
+    
+    # Unify namespace entries
+    nsu <- sort(unique(ns))
+    mtc <- match(nsu, ns)
+    valu <- val[mtc]
+    
+    return(data.frame(ns=nsu, uri=valu, stringsAsFactors=FALSE))
+}
+
+setMethod("sparqlNamespace", c("character", "missing"),
+    function(prefix, iri, ...)
+    {
+        dfr <- parsePrefix(prefix)
+        
+        object <- .SparqlNamespace()
+        .Call("sparql_ns_add_prefix", object@ptr, dfr$ns, dfr$uri)
+        return(object)
+        }
+)
+
+
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 # PrefixedTerm
@@ -570,16 +616,16 @@ setMethod("addRdf", c("ResultDef", "RdfTerm"), function(object, rdf){
 # class query variables
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
-.QueryVariables <- setClass("QueryVariables", contains="RdfTerm")
+.QueryVariable <- setClass("QueryVariable", contains="RdfTerm")
 
-setMethod("initialize","QueryVariables", function(.Object, nodes=NULL){
+setMethod("initialize","QueryVariable", function(.Object, nodes=NULL){
     .Object <- callNextMethod(.Object)
     if(!is.null(nodes))
         .Object@ev$text <- paste("?", nodes, sep="")
     return(.Object)
 })
 
-queryVariables <- function(nodes=NULL){ return(.QueryVariables(nodes)) }
+queryVariable <- function(nodes=NULL){ return(.QueryVariable(nodes)) }
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -1241,8 +1287,15 @@ setMethod("sendQuery", "Sparql",
         {
             # Return data.frame
             # textConnection returns single use handle
-            res <- read.csv(textConnection(do_query(url, "text/csv")))
-            message("[  sendQuery.Sparql] Result size: ", nrow(res))
+            res <- do_query(url, "text/csv")
+            if(nchar(res) > 0)
+            {
+                res <- read.csv(textConnection(res))
+                message("[  sendQuery.Sparql] Result size: ", nrow(res))
+            }else{
+                message("[  sendQuery.Sparql] Result size: 0!")
+                return(NULL)
+            }
         }else if(accept == "html"){
             # Return result as XMLDocument
             res <- htmlParse(do_query(url, "text/html"))

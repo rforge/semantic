@@ -37,7 +37,7 @@
 \title{RdfTerm: Base Class for RDF Terms}
 %
 \description{Basic type representing RdfTerms.
-Various classes derive from RdfTerm: IriTerm, ResultDef, QueryVariables}
+Various classes derive from RdfTerm: IriTerm, ResultDef, QueryVariable}
 \section{Objects from the Class}{Can be created using the \code{rdfTerm}
     function.}
 %
@@ -82,7 +82,7 @@ SPARQL 1.1 Query Language W3C Recommendation
 \seealso{
 \code{\linkS4class{IriTerm}}
 \code{\linkS4class{ResultDef}}
-\code{\linkS4class{QueryVariables}}
+\code{\linkS4class{QueryVariable}}
 \code{\linkS4class{PrefixedTerm}}}
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
 % Examples

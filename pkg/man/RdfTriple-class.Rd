@@ -106,7 +106,7 @@ SPARQL 1.1 Query Language W3C Recommendation.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - %
 \seealso{\code{\linkS4class{RdfTerm}}}
 \examples{
-qv <- queryVariables(c("s", "p", "o"))
+qv <- queryVariable(c("s", "p", "o"))
 rt <- rdfTriple(qv[1], qv[2], qv[3])
 }
 \keyword{classes}

@@ -8,8 +8,9 @@
 %
 \alias{sparqlNamespace}
 \alias{sparqlNamespace-methods}
-\alias{sparqlNamespace,character,character-method}
 \alias{sparqlNamespace,missing,missing-method}
+\alias{sparqlNamespace,character,character-method}
+\alias{sparqlNamespace,character,missing-method}
 %
 \alias{initialize,SparqlNamespace-method}
 \alias{length,SparqlNamespace-method}
@@ -136,5 +137,10 @@ ns2 <- sparqlNamespace()
 addPrefix(ns2, prefix=nsp2, iri=nsi2)
 length(ns2)
 ns2
+# Create Namespace from textual representation
+nst <- "PREFIX psys: <http://proton.semanticweb.org/2006/05/protons#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX gene: <http://linkedlifedata.com/resource/entrezgene/>"
+ns <- sparqlNamespace(nst)
 }
 \keyword{classes}

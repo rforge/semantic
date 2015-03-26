@@ -31,7 +31,8 @@ Objects can be created by calls of the form \code{groupPattern()}.
 }
 \section{Slots}{
     \describe{
-        \item{\code{ev}:}{Object of class \code{"environment"} ~~ }
+        \item{\code{ev}:}{Object of class \code{"environment"}
+            containing list of BasicGroupPattern objects.}
     }
 }
 \section{Extends}{
@@ -93,7 +94,7 @@ Section 5.2
 \code{\linkS4class{RdfTriple}}
 }
 \examples{
-qv <- queryVariables(c("s", "p", "o"))
+qv <- queryVariable(c("s", "p", "o"))
 rt <- rdfTriple(qv[1], qv[2], qv[3])
 gp <- groupPattern(rt)
 gp

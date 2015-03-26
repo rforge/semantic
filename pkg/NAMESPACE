@@ -14,7 +14,7 @@ export(
 	"parse_data_types",
 	"sparql",
         "queryForm",
-	"queryVariables",
+	"queryVariable",
 	"split_prefix",
         "rdfData"
 )
@@ -53,7 +53,7 @@ exportClasses(
      "IriTerm",
      "PrefixedTerm",
      "QueryForm",
-     "QueryVariables",
+     "QueryVariable",
      "RdfData",
      "RdfGraph",
      "RdfTerm",
